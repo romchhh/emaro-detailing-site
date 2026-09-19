@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Montserrat } from 'next/font/google'
-import { headers } from 'next/headers'
 import './globals.css'
 import './emaro.css'
-import { isLocale, localeHtmlLang, type Locale } from '../i18n/config'
 import { pl } from '../i18n/dictionaries/pl'
 import {
   absoluteUrl,
@@ -20,6 +18,8 @@ const montserrat = Montserrat({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 })
 
 const verification = getSiteVerification()
@@ -128,13 +128,11 @@ export const viewport: Viewport = {
   colorScheme: 'light',
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headerLocale = (await headers()).get('x-locale') ?? ''
-  const locale: Locale = isLocale(headerLocale) ? headerLocale : 'pl'
-  const htmlLang = localeHtmlLang[locale]
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // lang is updated client-side by HtmlLang in [locale] layout — avoid headers()
+  // here so pages can use ISR instead of forced dynamic SSR.
   return (
-    <html lang={htmlLang}>
+    <html lang="pl">
       <body className={`emaro ${montserrat.className}`}>
         <a href="#main-content" className="skip-link">
           Skip to content

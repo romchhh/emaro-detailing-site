@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { readAdminDb } from '@/lib/cms/store'
 import {
   ADMIN_COOKIE,
   authenticateUser,
@@ -6,7 +7,6 @@ import {
   destroySession,
   getRequestSession,
 } from '@/lib/cms/session'
-import { readDb } from '@/lib/cms/store'
 import { getClientIp, isRateLimited } from '@/lib/security/rateLimit'
 import { expectsJson, isAllowedOrigin } from '@/lib/security/requestGuard'
 
@@ -19,7 +19,7 @@ export async function GET() {
     return NextResponse.json({ ok: false }, { status: 401 })
   }
 
-  const user = readDb().users.find((u) => u.id === session.userId)
+  const user = readAdminDb().users.find((u) => u.id === session.userId)
   return NextResponse.json({
     ok: true,
     login: session.login,

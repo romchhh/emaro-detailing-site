@@ -5,7 +5,7 @@ import {
   deleteAdminSession,
   loadAdminSession,
   purgeExpiredAdminSessions,
-  readDb,
+  readAdminDb,
   saveAdminSession,
   uid,
   type AdminSessionRecord,
@@ -63,7 +63,7 @@ export async function requireAdmin() {
 }
 
 export function authenticateUser(login: string, password: string) {
-  const db = readDb()
+  const db = readAdminDb()
   const user =
     db.users.find(
       (entry) => entry.active && entry.login === login.trim() && verifyPassword(entry.password, password),

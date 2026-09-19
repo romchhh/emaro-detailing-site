@@ -1,6 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import type BetterSqlite3 from 'better-sqlite3'
+import { hashPassword, isPasswordHash } from '@/lib/security/password'
+import { revalidateCmsCaches } from './cacheInvalidate'
 import { createDefaultDb } from './seed'
 import type {
   AdminSessionRecord,
@@ -29,6 +31,24 @@ declare global {
   var __emaroSqlite: SqliteDatabase | undefined
   // eslint-disable-next-line no-var
   var __emaroBuildDb: CmsDb | undefined
+  // eslint-disable-next-line no-var
+  var __emaroDefaultsDb: CmsDb | undefined
+  // eslint-disable-next-line no-var
+  var __emaroPublicCache: { at: number; data: CmsDb } | undefined
+}
+
+const PUBLIC_CACHE_MS = 60_000
+
+function getDefaults(): CmsDb {
+  if (!globalThis.__emaroDefaultsDb) {
+    globalThis.__emaroDefaultsDb = createDefaultDb()
+  }
+  return globalThis.__emaroDefaultsDb
+}
+
+function invalidatePublicCache() {
+  globalThis.__emaroPublicCache = undefined
+  revalidateCmsCaches()
 }
 
 function isProductionBuild() {
@@ -258,6 +278,11 @@ function insertAnalytics(db: SqliteDatabase, items: AnalyticsEvent[]) {
 }
 
 function seedDatabase(db: SqliteDatabase, seed: CmsDb) {
+  const users = seed.users.map((user) => ({
+    ...user,
+    password: isPasswordHash(user.password) ? user.password : hashPassword(user.password),
+  }))
+
   const tx = db.transaction(() => {
     writeBrand(db, seed.brand)
     writeCopy(db, seed.copy)
@@ -266,7 +291,7 @@ function seedDatabase(db: SqliteDatabase, seed: CmsDb) {
     insertOrdered(db, 'before_after', seed.beforeAfter as unknown as Array<Record<string, unknown>>)
     insertOrdered(db, 'reviews', seed.reviews as unknown as Array<Record<string, unknown>>)
     insertLeads(db, seed.leads)
-    insertUsers(db, seed.users)
+    insertUsers(db, users)
     insertAnalytics(db, seed.analytics)
     db.prepare(`INSERT OR REPLACE INTO meta (key, value) VALUES ('seeded', '1')`).run()
   })
@@ -274,7 +299,7 @@ function seedDatabase(db: SqliteDatabase, seed: CmsDb) {
 }
 
 function mergeLegacyJson(parsed: Partial<CmsDb>): CmsDb {
-  const defaults = createDefaultDb()
+  const defaults = getDefaults()
   return {
     ...defaults,
     ...parsed,
@@ -359,13 +384,18 @@ function replaceOrdered(
 export function readDb(): CmsDb {
   if (isProductionBuild()) {
     if (!globalThis.__emaroBuildDb) {
-      globalThis.__emaroBuildDb = createDefaultDb()
+      globalThis.__emaroBuildDb = getDefaults()
     }
     return structuredClone(globalThis.__emaroBuildDb)
   }
 
+  const cached = globalThis.__emaroPublicCache
+  if (cached && Date.now() - cached.at < PUBLIC_CACHE_MS) {
+    return cached.data
+  }
+
   const db = getDb()
-  const defaults = createDefaultDb()
+  const defaults = getDefaults()
 
   const brandRow = db.prepare(`SELECT data FROM brand WHERE id = 1`).get() as
     | { data: string }
@@ -377,7 +407,7 @@ export function readDb(): CmsDb {
     | { data: string }
     | undefined
 
-  return {
+  const data: CmsDb = {
     brand: brandRow
       ? { ...defaults.brand, ...(JSON.parse(brandRow.data) as BrandSettings) }
       : defaults.brand,
@@ -393,6 +423,27 @@ export function readDb(): CmsDb {
         ? ({ ...defaults.copy.uk, ...(JSON.parse(ukRow.data) as Dictionary) } as Dictionary)
         : defaults.copy.uk,
     },
+    // Heavy admin collections — load lazily via dedicated helpers when needed
+    leads: [],
+    analytics: [],
+    users: [],
+    sessions: [],
+  }
+
+  globalThis.__emaroPublicCache = { at: Date.now(), data }
+  return data
+}
+
+/** Full DB including leads/analytics/users — for admin APIs only. */
+export function readAdminDb(): CmsDb {
+  if (isProductionBuild()) {
+    return readDb()
+  }
+
+  const db = getDb()
+  const base = readDb()
+  return {
+    ...base,
     leads: readCollection<Lead>(db, 'leads', 'created_at DESC'),
     analytics: readCollection<AnalyticsEvent>(db, 'analytics', 'created_at ASC'),
     users: readCollection<AdminUser>(db, 'users'),
@@ -403,6 +454,7 @@ export function readDb(): CmsDb {
 export function writeDb(cms: CmsDb) {
   if (isProductionBuild()) {
     globalThis.__emaroBuildDb = structuredClone(cms)
+    invalidatePublicCache()
     return
   }
 
@@ -431,10 +483,11 @@ export function writeDb(cms: CmsDb) {
     db.prepare(`INSERT OR REPLACE INTO meta (key, value) VALUES ('seeded', '1')`).run()
   })
   tx()
+  invalidatePublicCache()
 }
 
 export function updateDb(mutator: (db: CmsDb) => void): CmsDb {
-  const cms = readDb()
+  const cms = readAdminDb()
   mutator(cms)
   writeDb(cms)
   return cms

@@ -1,9 +1,25 @@
-import AboutSection from './sections/AboutSection'
-import BeforeAfterSection from './sections/BeforeAfterSection'
-import GallerySection from './sections/GallerySection'
-import PricesSection from './sections/PricesSection'
-import ReviewsSection from './sections/ReviewsSection'
-import ServicesSection from './sections/ServicesSection'
+'use client'
+
+import dynamic from 'next/dynamic'
+
+const AboutSection = dynamic(() => import('./sections/AboutSection'), {
+  loading: () => null,
+})
+const ServicesSection = dynamic(() => import('./sections/ServicesSection'), {
+  loading: () => null,
+})
+const PricesSection = dynamic(() => import('./sections/PricesSection'), {
+  loading: () => null,
+})
+const BeforeAfterSection = dynamic(() => import('./sections/BeforeAfterSection'), {
+  loading: () => null,
+})
+const GallerySection = dynamic(() => import('./sections/GallerySection'), {
+  loading: () => null,
+})
+const ReviewsSection = dynamic(() => import('./sections/ReviewsSection'), {
+  loading: () => null,
+})
 
 export default function HomeSections() {
   return (

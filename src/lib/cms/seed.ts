@@ -10,7 +10,6 @@ import {
 import { pl } from '@/i18n/dictionaries/pl'
 import { uk } from '@/i18n/dictionaries/uk'
 import type { Dictionary } from '@/i18n/types'
-import { hashPassword } from '@/lib/security/password'
 import type {
   BrandSettings,
   CmsBeforeAfterItem,
@@ -122,7 +121,9 @@ export function createDefaultDb(): CmsDb {
       {
         id: 'user-admin',
         login: process.env.ADMIN_LOGIN || 'admin',
-        password: hashPassword(process.env.ADMIN_PASSWORD || 'emaro2025'),
+        // Plaintext here is intentional — hashed only when seeding to SQLite.
+        // Never call bcrypt inside createDefaultDb (runs on every public read).
+        password: process.env.ADMIN_PASSWORD || 'emaro2025',
         name: 'Administrator',
         active: true,
       },

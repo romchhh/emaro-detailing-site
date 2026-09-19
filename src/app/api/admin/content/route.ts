@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/cms/session'
+import { revalidateCmsCaches } from '@/lib/cms/cacheInvalidate'
 import { readDb, updateDb } from '@/lib/cms/store'
 import type { CmsDb } from '@/lib/cms/types'
 
@@ -8,6 +9,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 function revalidateSite() {
+  revalidateCmsCaches()
   revalidatePath('/', 'layout')
   revalidatePath('/pl')
   revalidatePath('/uk')

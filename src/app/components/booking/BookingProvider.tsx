@@ -8,9 +8,11 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import BookingModal from './BookingModal'
+import dynamic from 'next/dynamic'
 import ScrollBookingPrompt from './ScrollBookingPrompt'
 import { useBodyScrollLock } from '../../lib/useBodyScrollLock'
+
+const BookingModal = dynamic(() => import('./BookingModal'), { ssr: false })
 
 type BookingContextValue = {
   openBookingModal: () => void
@@ -84,7 +86,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
           onDismiss={dismissPrompt}
         />
       )}
-      <BookingModal isOpen={isOpen} onClose={closeBookingModal} />
+      {isOpen ? <BookingModal isOpen={isOpen} onClose={closeBookingModal} /> : null}
     </BookingContext.Provider>
   )
 }

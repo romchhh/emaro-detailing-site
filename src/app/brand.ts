@@ -1,3 +1,5 @@
+import { cache } from 'react'
+import { getCachedSiteMedia } from '@/lib/cms/cache'
 import {
   cmsBeforeAfterItems,
   cmsBrand,
@@ -24,7 +26,7 @@ export const BRAND = {
   contactImage: '/images/emaro/hero-desktop.png',
 } as const
 
-export function getBrand() {
+export const getBrand = cache(() => {
   try {
     return cmsBrand()
   } catch {
@@ -38,37 +40,48 @@ export function getBrand() {
       telegramNotify: true,
     }
   }
-}
+})
 
-export function getSiteMedia() {
-  const brand = getBrand()
-  return {
-    brand,
-    services: cmsServiceItems(),
-    gallery: cmsGalleryItems(),
-    beforeAfter: cmsBeforeAfterItems(),
-    reviews: cmsReviewItems(),
-    aboutTeam: {
-      src: brand.aboutTeamImage,
-      position: brand.aboutTeamPosition,
-    },
-    aboutCta: {
-      src: brand.aboutCtaImage,
-      position: brand.aboutCtaPosition,
-    },
+/** Brand + services/gallery media from CMS (cached 1h, tagged). */
+export const getSiteMedia = cache(async () => getCachedSiteMedia())
+
+function buildShellFromLive() {
+  try {
+    const brand = cmsBrand()
+    return {
+      brand,
+      services: cmsServiceItems(),
+      gallery: cmsGalleryItems(),
+      beforeAfter: cmsBeforeAfterItems(),
+      reviews: cmsReviewItems(),
+      aboutTeam: {
+        src: brand.aboutTeamImage,
+        position: brand.aboutTeamPosition,
+      },
+      aboutCta: {
+        src: brand.aboutCtaImage,
+        position: brand.aboutCtaPosition,
+      },
+    }
+  } catch {
+    return {
+      brand: getBrand(),
+      services: [] as ReturnType<typeof cmsServiceItems>,
+      gallery: [] as ReturnType<typeof cmsGalleryItems>,
+      beforeAfter: [] as ReturnType<typeof cmsBeforeAfterItems>,
+      reviews: [] as ReturnType<typeof cmsReviewItems>,
+      aboutTeam: { src: '', position: 'center' },
+      aboutCta: { src: '', position: 'center' },
+    }
   }
 }
 
-/** Props for LocaleProvider (public pages + 404). */
-export function getLocaleShell(locale: 'pl' | 'uk') {
-  const media = getSiteMedia()
-  return {
-    brand: media.brand,
-    services: media.services,
-    gallery: media.gallery,
-    beforeAfter: media.beforeAfter,
-    reviews: media.reviews,
-    aboutTeam: media.aboutTeam,
-    aboutCta: media.aboutCta,
-  }
+/** Sync shell for 404 pages that cannot await. */
+export function getLocaleShellSync() {
+  return buildShellFromLive()
+}
+
+/** Async shell for public layouts (uses Next data cache). */
+export async function getLocaleShell() {
+  return getSiteMedia()
 }

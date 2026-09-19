@@ -5,10 +5,10 @@ import { LocaleProvider } from '../../i18n/LocaleProvider'
 import { getDictionarySync } from '../../i18n/getDictionary'
 import { defaultLocale } from '../../i18n/config'
 import { buildPageMetadata } from '../lib/pageMetadata'
-import { getLocaleShell } from '../brand'
+import { getLocaleShellSync } from '../brand'
 
 const dict = getDictionarySync(defaultLocale)
-const shell = getLocaleShell(defaultLocale)
+const shell = getLocaleShellSync()
 
 export const metadata: Metadata = buildPageMetadata({
   locale: defaultLocale,

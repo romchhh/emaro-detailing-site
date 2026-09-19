@@ -25,8 +25,8 @@ export default function Hero() {
           src={BRAND.heroMobile}
           alt=""
           fill
-          priority
           sizes="100vw"
+          loading="lazy"
           className={`${styles.bgImage} ${styles.bgMobile}`}
         />
       </div>

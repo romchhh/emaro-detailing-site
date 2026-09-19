@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/cms/session'
+import { revalidateCmsCaches } from '@/lib/cms/cacheInvalidate'
 import { getCmsDataDir, uid } from '@/lib/cms/store'
 
 export const runtime = 'nodejs'
@@ -149,6 +150,8 @@ export async function POST(request: Request) {
     urls.push(url)
     items.push({ url, type: isVideo ? 'video' : 'image', name: file.name })
   }
+
+  revalidateCmsCaches()
 
   return NextResponse.json({
     ok: true,

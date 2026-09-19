@@ -33,7 +33,7 @@ export default function JsonLd({ locale, dict }: Props) {
 
   const organization = {
     '@context': 'https://schema.org',
-    '@type': ['LocalBusiness', 'AutoDetailing'],
+    '@type': ['LocalBusiness', 'AutomotiveBusiness'],
     '@id': `${SITE_URL}/#organization`,
     name: SITE_NAME,
     alternateName: brand.shortName,
@@ -41,8 +41,6 @@ export default function JsonLd({ locale, dict }: Props) {
     logo: {
       '@type': 'ImageObject',
       url: absoluteUrl(SCHEMA_LOGO),
-      width: 500,
-      height: 500,
     },
     image: [absoluteUrl(OG_IMAGE), absoluteUrl(SCHEMA_LOGO)],
     description: dict.seo.defaultDescription,

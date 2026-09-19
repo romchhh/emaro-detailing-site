@@ -9,7 +9,7 @@ import { isLocale, locales, type Locale } from '../../i18n/config'
 import { buildPageMetadata } from '../lib/pageMetadata'
 import { getSiteMedia } from '../brand'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
@@ -47,7 +47,7 @@ export default async function LocaleLayout({
   if (!isLocale(resolved.locale)) notFound()
   const locale = resolved.locale as Locale
   const dict = await getDictionary(locale)
-  const media = getSiteMedia()
+  const media = await getSiteMedia()
 
   return (
     <LocaleProvider

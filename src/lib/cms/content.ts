@@ -1,7 +1,7 @@
 import type { Dictionary, ServiceCopy } from '@/i18n/types'
 import type { Locale } from '@/i18n/config'
 import { detectMediaKind } from '@/lib/media/kind'
-import { readDb } from './store'
+import { readAdminDb, readDb } from './store'
 import type {
   BrandSettings,
   CmsBeforeAfterItem,
@@ -32,11 +32,10 @@ export function cmsReviews(): CmsReview[] {
 }
 
 export function cmsLeads(): Lead[] {
-  return readDb().leads
+  return readAdminDb().leads
 }
 
-function applyEntitiesToDictionary(locale: Locale, base: Dictionary): Dictionary {
-  const db = readDb()
+function applyEntitiesToDictionary(locale: Locale, base: Dictionary, db = readDb()): Dictionary {
   const dict = structuredClone(base)
 
   const serviceItems: Record<string, ServiceCopy> = {}
@@ -91,11 +90,11 @@ function applyEntitiesToDictionary(locale: Locale, base: Dictionary): Dictionary
 export function cmsDictionary(locale: Locale): Dictionary {
   const db = readDb()
   const base = db.copy[locale] || db.copy.pl
-  return applyEntitiesToDictionary(locale, base)
+  return applyEntitiesToDictionary(locale, base, db)
 }
 
 export function cmsDashboardStats() {
-  const db = readDb()
+  const db = readAdminDb()
   const now = Date.now()
   const monthAgo = now - 1000 * 60 * 60 * 24 * 30
 

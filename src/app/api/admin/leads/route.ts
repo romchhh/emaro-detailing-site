@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/cms/session'
-import { readDb, updateDb } from '@/lib/cms/store'
+import { readAdminDb, updateDb } from '@/lib/cms/store'
 import type { Lead, LeadStatus } from '@/lib/cms/types'
 
 export const runtime = 'nodejs'
@@ -11,7 +11,7 @@ const STATUSES: LeadStatus[] = ['new', 'in_progress', 'done', 'archived']
 export async function GET() {
   const { error } = await requireAdmin()
   if (error) return error
-  return NextResponse.json({ ok: true, leads: readDb().leads })
+  return NextResponse.json({ ok: true, leads: readAdminDb().leads })
 }
 
 export async function PATCH(request: Request) {
