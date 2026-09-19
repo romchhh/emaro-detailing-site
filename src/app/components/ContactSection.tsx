@@ -1,9 +1,9 @@
 'use client'
 import Image from 'next/image'
-import { useState } from 'react'
-import { BRAND } from '../brand'
+import { useEffect, useRef, useState } from 'react'
+import { formatPhoneMask, isValidPhone, phoneForSubmit } from '../lib/phoneMask'
 import { submitLead } from '../lib/submitLead'
-import { useDictionary, useLocale } from '../../i18n/LocaleProvider'
+import { useBrand, useDictionary, useLocale } from '../../i18n/LocaleProvider'
 import styles from './ContactSection.module.css'
 
 type FormState = {
@@ -13,12 +13,15 @@ type FormState = {
   comment: string
   consent: boolean
   website: string
+  fax: string
 }
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export default function ContactSection() {
   const dict = useDictionary()
+  const BRAND = useBrand()
   const locale = useLocale()
+  const formOpenedAt = useRef(Date.now())
   const [form, setForm] = useState<FormState>({
     name: '',
     phone: '',
@@ -26,8 +29,13 @@ export default function ContactSection() {
     comment: '',
     consent: false,
     website: '',
+    fax: '',
   })
   const [status, setStatus] = useState<Status>('idle')
+
+  useEffect(() => {
+    formOpenedAt.current = Date.now()
+  }, [])
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const val = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
@@ -38,16 +46,22 @@ export default function ContactSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.consent) return
+    if (!isValidPhone(form.phone)) {
+      setStatus('error')
+      return
+    }
     setStatus('loading')
     try {
       await submitLead({
         source: 'contact',
         name: form.name,
-        phone: form.phone,
+        phone: phoneForSubmit(form.phone),
         service: form.service,
         comment: form.comment,
         locale,
         website: form.website,
+        fax: form.fax,
+        formOpenedAt: formOpenedAt.current,
       })
       setStatus('success')
     } catch {
@@ -109,15 +123,37 @@ export default function ContactSection() {
                     value={form.website}
                     onChange={set('website')}
                   />
+                  <label htmlFor="contact-fax">Fax</label>
+                  <input
+                    id="contact-fax"
+                    name="fax_number"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={form.fax}
+                    onChange={set('fax')}
+                  />
                 </div>
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label htmlFor="name">{dict.contact.name}</label>
-                    <input id="name" type="text" placeholder={dict.contact.namePh} value={form.name} onChange={set('name')} required autoComplete="name" />
+                    <input id="name" type="text" placeholder={dict.contact.namePh} value={form.name} onChange={set('name')} required autoComplete="name" maxLength={120} />
                   </div>
                   <div className={styles.field}>
                     <label htmlFor="phone">{dict.contact.phone}</label>
-                    <input id="phone" type="tel" placeholder={dict.contact.phonePh} value={form.phone} onChange={set('phone')} required autoComplete="tel" />
+                    <input
+                      id="phone"
+                      type="tel"
+                      placeholder={dict.contact.phonePh}
+                      value={form.phone}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, phone: formatPhoneMask(e.target.value) }))
+                        if (status === 'error') setStatus('idle')
+                      }}
+                      required
+                      autoComplete="tel"
+                      inputMode="tel"
+                    />
                   </div>
                 </div>
                 <div className={styles.field}>
@@ -134,7 +170,7 @@ export default function ContactSection() {
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="comment">{dict.contact.comment}</label>
-                  <textarea id="comment" placeholder={dict.contact.commentPh} rows={3} value={form.comment} onChange={set('comment')} />
+                  <textarea id="comment" placeholder={dict.contact.commentPh} rows={3} value={form.comment} onChange={set('comment')} maxLength={1000} />
                 </div>
                 <label className={styles.consent}>
                   <input type="checkbox" checked={form.consent} onChange={set('consent')} required />

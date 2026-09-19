@@ -29,5 +29,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cms
+/cms-data/emaro.json
+/cms-data/emaro.json.migrated
+/cms-data/*.sqlite
+/cms-data/*.sqlite-*
+/cms-data/uploads/*
+!/cms-data/uploads/.gitkeep
+
 # local source exports (copies in public/images/emaro/)
 /ChatGPT Image *.png

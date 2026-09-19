@@ -2,12 +2,12 @@
 
 import Image from 'next/image'
 import { BookingTrigger } from './booking/BookingProvider'
-import { BRAND } from '../brand'
-import { useDictionary } from '../../i18n/LocaleProvider'
+import { useBrand, useDictionary } from '../../i18n/LocaleProvider'
 import styles from './Hero.module.css'
 
 export default function Hero() {
   const dict = useDictionary()
+  const BRAND = useBrand()
   const { lines, accent, pillars, cardLabel, cardTitle, cardSub } = dict.hero
 
   return (

@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { BRAND } from '../../brand'
+import { formatPhoneMask, isValidPhone, phoneForSubmit } from '../../lib/phoneMask'
 import { submitLead } from '../../lib/submitLead'
-import { useDictionary, useLocale } from '../../../i18n/LocaleProvider'
+import { useBrand, useDictionary, useLocale } from '../../../i18n/LocaleProvider'
 import styles from './BookingModal.module.css'
 
-type FormState = { name: string; phone: string; email: string; website: string }
+type FormState = { name: string; phone: string; email: string; website: string; fax: string }
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 function SubmitArrowIcon() {
@@ -33,6 +33,8 @@ function WhatsAppIcon() {
   )
 }
 
+const emptyForm = (): FormState => ({ name: '', phone: '', email: '', website: '', fax: '' })
+
 export default function BookingModal({
   isOpen,
   onClose,
@@ -42,17 +44,20 @@ export default function BookingModal({
 }) {
   const dict = useDictionary()
   const locale = useLocale()
+  const brand = useBrand()
   const dialogRef = useRef<HTMLDivElement>(null)
-  const [form, setForm] = useState<FormState>({ name: '', phone: '', email: '', website: '' })
+  const formOpenedAt = useRef(Date.now())
+  const [form, setForm] = useState<FormState>(emptyForm)
   const [status, setStatus] = useState<Status>('idle')
 
   useEffect(() => {
     if (!isOpen) {
       setStatus('idle')
-      setForm({ name: '', phone: '', email: '', website: '' })
+      setForm(emptyForm())
       return
     }
 
+    formOpenedAt.current = Date.now()
     dialogRef.current?.focus()
   }, [isOpen])
 
@@ -60,15 +65,21 @@ export default function BookingModal({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (!isValidPhone(form.phone)) {
+      setStatus('error')
+      return
+    }
     setStatus('loading')
     try {
       await submitLead({
         source: 'booking',
         name: form.name,
-        phone: form.phone,
+        phone: phoneForSubmit(form.phone),
         email: form.email,
         locale,
         website: form.website,
+        fax: form.fax,
+        formOpenedAt: formOpenedAt.current,
       })
       setStatus('success')
     } catch {
@@ -120,6 +131,16 @@ export default function BookingModal({
                   value={form.website}
                   onChange={(event) => setForm((prev) => ({ ...prev, website: event.target.value }))}
                 />
+                <label htmlFor="booking-fax">Fax</label>
+                <input
+                  id="booking-fax"
+                  name="fax_number"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.fax}
+                  onChange={(event) => setForm((prev) => ({ ...prev, fax: event.target.value }))}
+                />
               </div>
               <input
                 id="booking-name"
@@ -133,6 +154,7 @@ export default function BookingModal({
                 }}
                 required
                 autoComplete="name"
+                maxLength={120}
               />
               <input
                 id="booking-phone"
@@ -141,11 +163,12 @@ export default function BookingModal({
                 placeholder={dict.booking.phonePh}
                 value={form.phone}
                 onChange={(event) => {
-                  setForm((prev) => ({ ...prev, phone: event.target.value }))
+                  setForm((prev) => ({ ...prev, phone: formatPhoneMask(event.target.value) }))
                   if (status === 'error') setStatus('idle')
                 }}
                 required
                 autoComplete="tel"
+                inputMode="tel"
               />
               <input
                 id="booking-email"
@@ -158,6 +181,7 @@ export default function BookingModal({
                   if (status === 'error') setStatus('idle')
                 }}
                 autoComplete="email"
+                maxLength={120}
               />
 
               {status === 'error' && <p className={styles.error}>{dict.booking.error}</p>}
@@ -179,7 +203,7 @@ export default function BookingModal({
               <p className={styles.socialLine}>
                 <span>{dict.booking.socialLead}</span>
                 <a
-                  href={BRAND.telegram}
+                  href={brand.telegram}
                   className={`${styles.socialLink} ${styles.socialTelegram}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -188,7 +212,7 @@ export default function BookingModal({
                   {dict.booking.telegram}
                 </a>
                 <a
-                  href={BRAND.whatsapp}
+                  href={brand.whatsapp}
                   className={`${styles.socialLink} ${styles.socialWhatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"

@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import { useCallback, useState } from 'react'
-import { BEFORE_AFTER_ITEMS, type BeforeAfterItem } from '../../data/siteContent'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+import type { BeforeAfterItem } from '../../data/siteContent'
+import { useBeforeAfter, useDictionary } from '../../../i18n/LocaleProvider'
 import { SectionHeading } from './SectionHeading'
 import styles from './sections.module.css'
 
@@ -87,14 +87,14 @@ function BeforeAfterSlider({
 
         <div className={styles.compareBeforeClip}>
           <Image
-            src={item.image}
+            src={item.beforeImage || item.image}
             alt=""
             fill
             sizes="(max-width: 768px) 100vw, 960px"
             className={styles.compareImage}
             style={{
               objectPosition: item.position,
-              filter: item.beforeFilter,
+              ...(item.beforeImage ? {} : { filter: item.beforeFilter }),
             }}
             draggable={false}
             priority
@@ -120,6 +120,7 @@ function BeforeAfterSlider({
 
 export default function BeforeAfterSection() {
   const dict = useDictionary()
+  const BEFORE_AFTER_ITEMS = useBeforeAfter()
 
   return (
     <section id="prace" className={`${styles.section} ${styles.beforeAfterSection}`}>
@@ -134,7 +135,7 @@ export default function BeforeAfterSection() {
             <BeforeAfterSlider
               key={item.id}
               item={item}
-              title={dict.beforeAfter.items[item.id].title}
+              title={dict.beforeAfter.items[item.id]?.title || item.id}
               beforeLabel={dict.beforeAfter.before}
               afterLabel={dict.beforeAfter.after}
             />

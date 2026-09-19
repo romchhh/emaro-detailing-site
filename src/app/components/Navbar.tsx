@@ -2,23 +2,22 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { BRAND } from '../brand'
 import { BookingTrigger } from './booking/BookingProvider'
 import LanguageSwitcher from './LanguageSwitcher'
 import { useBodyScrollLock } from '../lib/useBodyScrollLock'
-import { useDictionary, useLocale } from '../../i18n/LocaleProvider'
+import { useBrand, useDictionary, useLocale } from '../../i18n/LocaleProvider'
 import { NAV_SECTIONS, localePath } from '../../i18n/paths'
 import styles from './Navbar.module.css'
-
-const phoneTel = BRAND.phone.replace(/\s/g, '')
-const phoneDisplay = BRAND.phone.replace(/^\+48\s*/, '')
-const whatsappHref = `https://wa.me/${phoneTel.replace('+', '')}`
 
 export default function Navbar({ transparent = false }: { transparent?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const dict = useDictionary()
   const locale = useLocale()
+  const brand = useBrand()
+  const phoneTel = brand.phone.replace(/\s/g, '')
+  const phoneDisplay = brand.phone.replace(/^\+48\s*/, '')
+  const whatsappHref = brand.whatsapp || `https://wa.me/${phoneTel.replace('+', '')}`
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -33,10 +32,10 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
   return (
     <>
       <nav className={`${styles.nav} ${onHero ? styles.onHero : styles.scrolled}`}>
-        <Link href={localePath(locale)} className={styles.brand} aria-label={BRAND.name}>
+        <Link href={localePath(locale)} className={styles.brand} aria-label={brand.name}>
           <Image
-            src={BRAND.logo}
-            alt={BRAND.name}
+            src={brand.logo}
+            alt={brand.name}
             width={180}
             height={72}
             className={styles.logo}
@@ -62,7 +61,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
             className={styles.pillBtn}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`WhatsApp ${BRAND.phone}`}
+            aria-label={`WhatsApp ${brand.phone}`}
           >
             <span className={styles.pillIconWrap}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -92,7 +91,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
       <div className={`${styles.drawer} ${menuOpen ? styles.open : ''}`} role="dialog" aria-modal="true">
         <div className={styles.drawerTop}>
           <Link href={localePath(locale)} className={styles.drawerBrand} onClick={() => setMenuOpen(false)}>
-            <Image src={BRAND.logo} alt={BRAND.name} width={160} height={64} className={styles.logo} />
+            <Image src={brand.logo} alt={brand.name} width={160} height={64} className={styles.logo} />
           </Link>
           <button className={styles.drawerClose} onClick={() => setMenuOpen(false)} aria-label={dict.nav.closeMenu}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -109,8 +108,13 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
         </nav>
         <div className={styles.drawerActions}>
           <LanguageSwitcher />
-          <BookingTrigger className={styles.pillBtn} onClick={() => setMenuOpen(false)}>
-            {dict.nav.cta}
+          <BookingTrigger className={styles.drawerCta} onClick={() => setMenuOpen(false)}>
+            <span className={styles.drawerCtaLabel}>{dict.nav.cta}</span>
+            <span className={styles.drawerCtaIcon} aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 14 L14 2 M6 2 H14 V10" />
+              </svg>
+            </span>
           </BookingTrigger>
         </div>
       </div>

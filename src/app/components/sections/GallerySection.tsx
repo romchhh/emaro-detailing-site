@@ -2,14 +2,15 @@
 
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
-import { GALLERY_IMAGES } from '../../data/siteContent'
+
 import { useBodyScrollLock } from '../../lib/useBodyScrollLock'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+import { useDictionary, useGallery } from '../../../i18n/LocaleProvider'
 import { SectionHeading } from './SectionHeading'
 import styles from './sections.module.css'
 
 export default function GallerySection() {
   const dict = useDictionary()
+  const GALLERY_IMAGES = useGallery()
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const activeIndex = GALLERY_IMAGES.findIndex((item) => item.id === activeId)
@@ -21,19 +22,19 @@ export default function GallerySection() {
 
   const showPrev = useCallback(() => {
     if (activeIndex <= 0) {
-      setActiveId(GALLERY_IMAGES[GALLERY_IMAGES.length - 1].id)
+      setActiveId(GALLERY_IMAGES[GALLERY_IMAGES.length - 1]?.id ?? null)
       return
     }
     setActiveId(GALLERY_IMAGES[activeIndex - 1].id)
-  }, [activeIndex])
+  }, [activeIndex, GALLERY_IMAGES])
 
   const showNext = useCallback(() => {
     if (activeIndex < 0 || activeIndex >= GALLERY_IMAGES.length - 1) {
-      setActiveId(GALLERY_IMAGES[0].id)
+      setActiveId(GALLERY_IMAGES[0]?.id ?? null)
       return
     }
     setActiveId(GALLERY_IMAGES[activeIndex + 1].id)
-  }, [activeIndex])
+  }, [activeIndex, GALLERY_IMAGES])
 
   useEffect(() => {
     if (!activeItem) return
@@ -65,15 +66,34 @@ export default function GallerySection() {
               onClick={() => setActiveId(item.id)}
               aria-label={dict.gallery.alts[item.id]}
             >
-              <Image
-                src={item.src}
-                alt=""
-                fill
-                sizes={index === 0 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 50vw, 33vw'}
-                className={styles.galleryImage}
-                style={{ objectPosition: item.position }}
-                draggable={false}
-              />
+              {item.kind === 'video' ? (
+                <>
+                  <video
+                    src={item.src}
+                    className={styles.galleryImage}
+                    style={{ objectPosition: item.position }}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    draggable={false}
+                  />
+                  <span className={styles.galleryPlayBadge} aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                </>
+              ) : (
+                <Image
+                  src={item.src}
+                  alt=""
+                  fill
+                  sizes={index === 0 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 50vw, 33vw'}
+                  className={styles.galleryImage}
+                  style={{ objectPosition: item.position }}
+                  draggable={false}
+                />
+              )}
             </button>
           ))}
         </div>
@@ -125,16 +145,28 @@ export default function GallerySection() {
             </button>
 
             <div className={styles.galleryLightboxMedia}>
-              <Image
-                src={activeItem.src}
-                alt={dict.gallery.alts[activeItem.id]}
-                fill
-                sizes="100vw"
-                className={styles.galleryLightboxImage}
-                style={{ objectPosition: activeItem.position }}
-                priority
-                draggable={false}
-              />
+              {activeItem.kind === 'video' ? (
+                <video
+                  key={activeItem.id}
+                  src={activeItem.src}
+                  className={styles.galleryLightboxVideo}
+                  controls
+                  playsInline
+                  autoPlay
+                  preload="metadata"
+                />
+              ) : (
+                <Image
+                  src={activeItem.src}
+                  alt={dict.gallery.alts[activeItem.id]}
+                  fill
+                  sizes="100vw"
+                  className={styles.galleryLightboxImage}
+                  style={{ objectPosition: activeItem.position }}
+                  priority
+                  draggable={false}
+                />
+              )}
             </div>
 
             <p className={styles.galleryLightboxCaption}>{dict.gallery.alts[activeItem.id]}</p>

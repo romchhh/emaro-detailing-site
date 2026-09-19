@@ -11,8 +11,9 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string }>
 }) {
-  if (!isLocale((await params).locale)) return {}
-  const locale = (await params).locale as Locale
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale = raw as Locale
   const dict = await getDictionary(locale)
 
   return buildPageMetadata({
@@ -31,7 +32,8 @@ export default async function PrivacyPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
-  const locale = (isLocale((await params).locale) ? (await params).locale : 'pl') as Locale
+  const { locale: raw } = await params
+  const locale = (isLocale(raw) ? raw : 'pl') as Locale
   const dict = await getDictionary(locale)
 
   return (

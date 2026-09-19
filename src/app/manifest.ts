@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { BRAND } from './brand'
+import { getBrand } from './brand'
 
 export default function manifest(): MetadataRoute.Manifest {
+  const brand = getBrand()
   return {
-    name: BRAND.name,
-    short_name: BRAND.shortName,
+    name: brand.name,
+    short_name: brand.shortName,
     description:
       'Emaro Premium Auto Care — mobilny detailing w Warszawie. Mycie, czyszczenie wnętrza i pielęgnacja aut, busów i ciężarówek.',
     start_url: '/pl',

@@ -4,13 +4,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { BookingTrigger } from './booking/BookingProvider'
 import InstagramIcon from './InstagramIcon'
-import { BRAND } from '../brand'
-import { useDictionary, useLocale } from '../../i18n/LocaleProvider'
+import { useBrand, useDictionary, useLocale } from '../../i18n/LocaleProvider'
 import { NAV_SECTIONS, localePath } from '../../i18n/paths'
 import styles from './Footer.module.css'
 
 export default function Footer() {
   const dict = useDictionary()
+  const BRAND = useBrand()
   const locale = useLocale()
 
   return (

@@ -9,12 +9,15 @@ export type LeadPayload = {
   pageUrl?: string
   pagePath?: string
   website?: string
+  fax?: string
+  formOpenedAt?: number
 }
 
 export async function submitLead(payload: LeadPayload) {
   const response = await fetch('/api/lead', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
     body: JSON.stringify({
       ...payload,
       pageUrl: typeof window !== 'undefined' ? window.location.href : payload.pageUrl,

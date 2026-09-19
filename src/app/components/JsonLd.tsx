@@ -1,4 +1,4 @@
-import { BRAND } from '../brand'
+import { getBrand } from '../brand'
 import type { Dictionary } from '../../i18n/types'
 import type { Locale } from '../../i18n/config'
 import { localeHtmlLang } from '../../i18n/config'
@@ -6,7 +6,6 @@ import {
   OG_IMAGE,
   SAME_AS,
   SCHEMA_LOGO,
-  SITE_NAME,
   SITE_URL,
   absoluteUrl,
   phoneTel,
@@ -27,6 +26,8 @@ type Props = {
 }
 
 export default function JsonLd({ locale, dict }: Props) {
+  const brand = getBrand()
+  const SITE_NAME = brand.name
   const lang = localeHtmlLang[locale]
   const pageUrl = absoluteUrl(`/${locale}`)
 
@@ -35,7 +36,7 @@ export default function JsonLd({ locale, dict }: Props) {
     '@type': ['LocalBusiness', 'AutoDetailing'],
     '@id': `${SITE_URL}/#organization`,
     name: SITE_NAME,
-    alternateName: BRAND.shortName,
+    alternateName: brand.shortName,
     url: SITE_URL,
     logo: {
       '@type': 'ImageObject',
@@ -45,9 +46,9 @@ export default function JsonLd({ locale, dict }: Props) {
     },
     image: [absoluteUrl(OG_IMAGE), absoluteUrl(SCHEMA_LOGO)],
     description: dict.seo.defaultDescription,
-    slogan: BRAND.tagline,
-    email: BRAND.email,
-    telephone: phoneTel(BRAND.phone),
+    slogan: brand.tagline[locale] || brand.tagline.pl,
+    email: brand.email,
+    telephone: phoneTel(brand.phone),
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'Warszawa',
@@ -70,9 +71,9 @@ export default function JsonLd({ locale, dict }: Props) {
     },
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: phoneTel(BRAND.phone),
+      telephone: phoneTel(brand.phone),
       contactType: 'customer service',
-      email: BRAND.email,
+      email: brand.email,
       areaServed: ['PL'],
       availableLanguage: ['Polish', 'Ukrainian'],
     },
@@ -89,7 +90,7 @@ export default function JsonLd({ locale, dict }: Props) {
     '@id': `${SITE_URL}/#website`,
     url: SITE_URL,
     name: SITE_NAME,
-    alternateName: BRAND.shortName,
+    alternateName: brand.shortName,
     description: dict.seo.defaultDescription,
     publisher: { '@id': `${SITE_URL}/#organization` },
     inLanguage: ['pl', 'uk'],
@@ -178,6 +179,8 @@ type PrivacyProps = {
 }
 
 export function PrivacyJsonLd({ locale, dict }: PrivacyProps) {
+  const brand = getBrand()
+  const SITE_NAME = brand.name
   const lang = localeHtmlLang[locale]
   const homeUrl = absoluteUrl(`/${locale}`)
   const pageUrl = absoluteUrl(`/${locale}/privacy`)

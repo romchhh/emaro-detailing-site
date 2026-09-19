@@ -1,0 +1,146 @@
+.chart {
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.gridLine {
+  stroke: rgba(14, 14, 14, 0.06);
+  stroke-width: 1;
+}
+
+.line {
+  fill: none;
+  stroke: #ff6333;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dot {
+  fill: #fff;
+  stroke: #ff6333;
+  stroke-width: 3;
+}
+
+.labels {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-muted);
+  text-align: center;
+}
+
+.barChart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.barMeta strong {
+  color: var(--admin-text);
+}
+
+.barTrack {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(14, 14, 14, 0.06);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.donutWrap {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.donut {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.donutHole {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.donutHole strong {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.donutHole span {
+  font-size: 12px;
+  color: var(--admin-muted);
+  font-weight: 700;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--admin-muted);
+}
+
+.legendItem span:first-child {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.legendItem strong {
+  color: var(--admin-text);
+}
+
+@media (max-width: 720px) {
+  .donutWrap {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}

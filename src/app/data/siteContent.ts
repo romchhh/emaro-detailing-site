@@ -13,6 +13,7 @@ export type ServiceItem = {
 export type BeforeAfterItem = {
   id: string
   image: string
+  beforeImage?: string
   position: string
   beforeFilter: string
 }
@@ -20,6 +21,7 @@ export type BeforeAfterItem = {
 export type GalleryItem = {
   id: string
   src: string
+  kind: 'image' | 'video'
   position: string
 }
 
@@ -124,15 +126,15 @@ export const SERVICES: ServiceItem[] = [
 ]
 
 export const GALLERY_IMAGES: GalleryItem[] = [
-  { id: 'g1', src: '/images/emaro/hero-desktop.png', position: 'center 42%' },
-  { id: 'g2', src: serviceImage('cars-exterior.webp'), position: 'center 48%' },
-  { id: 'g3', src: serviceImage('cars-interior.jpg'), position: 'center 42%' },
-  { id: 'g4', src: serviceImage('cars-seats-leather.jpg'), position: 'center 58%' },
-  { id: 'g5', src: serviceImage('cars-seats-fabric.jpg'), position: 'center 45%' },
-  { id: 'g6', src: serviceImage('vans-interior.jpg'), position: 'center 38%' },
-  { id: 'g7', src: serviceImage('vans-exterior.jpg'), position: 'center 35%' },
-  { id: 'g8', src: serviceImage('trucks-cabin.jpg'), position: 'center 55%' },
-  { id: 'g9', src: serviceImage('trucks-full.webp'), position: 'center 40%' },
+  { id: 'g1', src: '/images/emaro/hero-desktop.png', kind: 'image', position: 'center 42%' },
+  { id: 'g2', src: serviceImage('cars-exterior.webp'), kind: 'image', position: 'center 48%' },
+  { id: 'g3', src: serviceImage('cars-interior.jpg'), kind: 'image', position: 'center 42%' },
+  { id: 'g4', src: serviceImage('cars-seats-leather.jpg'), kind: 'image', position: 'center 58%' },
+  { id: 'g5', src: serviceImage('cars-seats-fabric.jpg'), kind: 'image', position: 'center 45%' },
+  { id: 'g6', src: serviceImage('vans-interior.jpg'), kind: 'image', position: 'center 38%' },
+  { id: 'g7', src: serviceImage('vans-exterior.jpg'), kind: 'image', position: 'center 35%' },
+  { id: 'g8', src: serviceImage('trucks-cabin.jpg'), kind: 'image', position: 'center 55%' },
+  { id: 'g9', src: serviceImage('trucks-full.webp'), kind: 'image', position: 'center 40%' },
 ]
 
 export const BEFORE_AFTER_ITEMS: BeforeAfterItem[] = [

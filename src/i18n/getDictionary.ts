@@ -1,14 +1,23 @@
 import type { Locale } from './config'
 import type { Dictionary } from './types'
+import { cmsDictionary } from '@/lib/cms/content'
 import { pl } from './dictionaries/pl'
 import { uk } from './dictionaries/uk'
 
-const dictionaries = { pl, uk } as const
+const fallback = { pl, uk } as const
 
 export async function getDictionary(locale: Locale): Promise<Dictionary> {
-  return (dictionaries[locale] ?? dictionaries.pl) as Dictionary
+  try {
+    return cmsDictionary(locale)
+  } catch {
+    return (fallback[locale] ?? fallback.pl) as Dictionary
+  }
 }
 
 export function getDictionarySync(locale: Locale): Dictionary {
-  return (dictionaries[locale] ?? dictionaries.pl) as Dictionary
+  try {
+    return cmsDictionary(locale)
+  } catch {
+    return (fallback[locale] ?? fallback.pl) as Dictionary
+  }
 }

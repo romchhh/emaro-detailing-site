@@ -2,9 +2,9 @@
 
 import Image from 'next/image'
 import { BookingTrigger } from '../booking/BookingProvider'
-import { SERVICES, type ServiceItem } from '../../data/siteContent'
+import type { ServiceItem } from '../../data/siteContent'
 import type { Dictionary } from '../../../i18n/types'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+import { useDictionary, useServices } from '../../../i18n/LocaleProvider'
 import styles from './sections.module.css'
 
 const CARS_BENTO_LAYOUT = [
@@ -214,6 +214,7 @@ function FleetCategoryGrid({
 
 export default function PricesSection() {
   const dict = useDictionary()
+  const SERVICES = useServices()
   const fleetServices = SERVICES.filter((service) => service.category !== 'cars')
 
   return (

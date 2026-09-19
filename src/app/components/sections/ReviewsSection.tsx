@@ -1,7 +1,7 @@
 'use client'
 
-import { REVIEW_ITEMS } from '../../data/siteContent'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+
+import { useDictionary, useReviews } from '../../../i18n/LocaleProvider'
 import { SectionHeading } from './SectionHeading'
 import styles from './sections.module.css'
 
@@ -30,6 +30,7 @@ function ReviewIcon() {
 
 export default function ReviewsSection() {
   const dict = useDictionary()
+  const REVIEW_ITEMS = useReviews()
 
   return (
     <section id="opinie" className={`${styles.section} ${styles.reviewsSection}`}>
@@ -42,6 +43,7 @@ export default function ReviewsSection() {
         <div className={styles.reviewsRow}>
           {REVIEW_ITEMS.map((item) => {
             const copy = dict.reviews.items[item.id]
+            if (!copy) return null
             return (
               <article key={item.id} className={styles.reviewCard}>
                 <div className={styles.reviewContent}>

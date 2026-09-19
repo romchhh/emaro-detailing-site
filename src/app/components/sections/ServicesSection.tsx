@@ -3,9 +3,9 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookingTrigger } from '../booking/BookingProvider'
-import { SERVICE_CATEGORIES, SERVICES, type ServiceItem } from '../../data/siteContent'
+import { SERVICE_CATEGORIES, type ServiceItem } from '../../data/siteContent'
 import type { Dictionary } from '../../../i18n/types'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+import { useDictionary, useServices } from '../../../i18n/LocaleProvider'
 import { SectionHeading } from './SectionHeading'
 import styles from './sections.module.css'
 
@@ -138,6 +138,7 @@ function ServiceCarousel({
 
 export default function ServicesSection() {
   const dict = useDictionary()
+  const SERVICES = useServices()
 
   return (
     <section id="uslugi" className={`${styles.section} ${styles.servicesSection}`}>

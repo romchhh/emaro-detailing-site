@@ -1,4 +1,16 @@
 import { NextResponse } from 'next/server'
+import { appendAnalytics, appendLead, uid } from '@/lib/cms/store'
+import { cmsBrand } from '@/lib/cms/content'
+import { getClientIp, isRateLimited } from '@/lib/security/rateLimit'
+import {
+  expectsJson,
+  isAllowedOrigin,
+  isSuspiciousTiming,
+} from '@/lib/security/requestGuard'
+import { isValidPhone, phoneForSubmit } from '@/app/lib/phoneMask'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 type LeadSource = 'contact' | 'booking'
 
@@ -13,24 +25,8 @@ type LeadPayload = {
   pageUrl?: string
   pagePath?: string
   website?: string // honeypot
-}
-
-const RATE_LIMIT_WINDOW_MS = 60_000
-const RATE_LIMIT_MAX = 8
-const recentHits = new Map<string, number[]>()
-
-function getClientIp(request: Request) {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown'
-  return request.headers.get('x-real-ip') || 'unknown'
-}
-
-function isRateLimited(ip: string) {
-  const now = Date.now()
-  const hits = (recentHits.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-  hits.push(now)
-  recentHits.set(ip, hits)
-  return hits.length > RATE_LIMIT_MAX
+  fax?: string // honeypot
+  formOpenedAt?: number
 }
 
 function clean(value: unknown, max = 500) {
@@ -146,7 +142,6 @@ function buildMessage(
 }
 
 async function sendTelegramMessage(text: string) {
-  // Strip accidental quotes/spaces from Vercel dashboard paste.
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim().replace(/^['"]|['"]$/g, '')
   const chatId = (
     process.env.TELEGRAM_CHAT_ID ||
@@ -182,23 +177,44 @@ async function sendTelegramMessage(text: string) {
   }
 }
 
+function softOk() {
+  // Silent success for bots — do not reveal rejection reason
+  return NextResponse.json({ ok: true })
+}
+
 export async function POST(request: Request) {
   try {
+    if (!expectsJson(request)) {
+      return NextResponse.json({ ok: false, error: 'invalid' }, { status: 415 })
+    }
+
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
+    }
+
     const ip = getClientIp(request)
-    if (isRateLimited(ip)) {
+    if (isRateLimited(`lead:${ip}`, { windowMs: 60_000, max: 5 })) {
       return NextResponse.json({ ok: false, error: 'rate_limited' }, { status: 429 })
     }
 
-    const body = (await request.json()) as LeadPayload
+    const body = (await request.json().catch(() => null)) as LeadPayload | null
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ ok: false, error: 'invalid' }, { status: 400 })
+    }
 
-    // Honeypot — bots fill this; humans don't.
-    if (clean(body.website, 100)) {
-      return NextResponse.json({ ok: true })
+    // Honeypots — bots fill these; humans don't.
+    if (clean(body.website, 100) || clean(body.fax, 100)) {
+      return softOk()
+    }
+
+    if (isSuspiciousTiming(body.formOpenedAt)) {
+      return softOk()
     }
 
     const source: LeadSource = body.source === 'booking' ? 'booking' : 'contact'
     const name = clean(body.name, 120)
-    const phone = clean(body.phone, 40)
+    const rawPhone = clean(body.phone, 40)
+    const phone = phoneForSubmit(rawPhone)
     const email = clean(body.email, 120)
     const service = clean(body.service, 200)
     const comment = clean(body.comment, 1000)
@@ -207,13 +223,46 @@ export async function POST(request: Request) {
     const pagePath = clean(body.pagePath, 200)
     const userAgent = clean(request.headers.get('user-agent') ?? '', 300)
 
-    if (name.length < 2 || phone.length < 6) {
+    if (name.length < 2 || !isValidPhone(rawPhone)) {
       return NextResponse.json({ ok: false, error: 'invalid' }, { status: 400 })
+    }
+
+    // Block names that look like spam payloads
+    if (/https?:\/\//i.test(name) || /<[^>]+>/.test(name)) {
+      return softOk()
     }
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ ok: false, error: 'invalid_email' }, { status: 400 })
     }
+
+    const now = new Date().toISOString()
+    const leadId = uid('lead')
+    appendLead({
+      id: leadId,
+      name,
+      phone,
+      email,
+      service,
+      comment,
+      source,
+      status: 'new',
+      locale,
+      pageUrl,
+      pagePath,
+      userAgent,
+      notes: '',
+      createdAt: now,
+      updatedAt: now,
+    })
+    appendAnalytics({
+      id: uid('evt'),
+      type: 'lead',
+      path: pagePath || '/',
+      locale,
+      value: source,
+      createdAt: now,
+    })
 
     const message = buildMessage({
       source,
@@ -228,23 +277,32 @@ export async function POST(request: Request) {
       userAgent,
     })
 
-    await sendTelegramMessage(message)
+    const notify = cmsBrand().telegramNotify !== false
+    if (notify) {
+      try {
+        await sendTelegramMessage(message)
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'server'
+        console.error('[lead] telegram', msg)
+        const isConfig = msg.includes('not configured')
+        if (isConfig) {
+          const missingMatch = msg.match(/missing (.+)\)$/)
+          return NextResponse.json(
+            {
+              ok: true,
+              warning: 'telegram_not_configured',
+              ...(missingMatch ? { missing: missingMatch[1].split(', ') } : {}),
+            },
+            { status: 200 },
+          )
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'server'
     console.error('[lead]', message)
-    const isConfig = message.includes('not configured')
-    const missingMatch = message.match(/missing (.+)\)$/)
-    return NextResponse.json(
-      {
-        ok: false,
-        error: isConfig ? 'telegram_not_configured' : 'server',
-        ...(isConfig && missingMatch
-          ? { missing: missingMatch[1].split(', ') }
-          : {}),
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ ok: false, error: 'server' }, { status: 500 })
   }
 }

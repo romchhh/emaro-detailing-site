@@ -2,13 +2,14 @@
 
 import Image from 'next/image'
 import { BookingTrigger } from '../booking/BookingProvider'
-import { ABOUT_CTA_IMAGE, ABOUT_TEAM_IMAGE } from '../../data/siteContent'
-import { useDictionary } from '../../../i18n/LocaleProvider'
+
+import { useAboutImages, useDictionary } from '../../../i18n/LocaleProvider'
 import { SectionHeading } from './SectionHeading'
 import styles from './sections.module.css'
 
 export default function AboutSection() {
   const dict = useDictionary()
+  const { team: ABOUT_TEAM_IMAGE, cta: ABOUT_CTA_IMAGE } = useAboutImages()
 
   return (
     <section id="o-nas" className={`${styles.section} ${styles.aboutSection}`}>

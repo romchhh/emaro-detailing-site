@@ -5,8 +5,10 @@ import { LocaleProvider } from '../i18n/LocaleProvider'
 import { getDictionarySync } from '../i18n/getDictionary'
 import { defaultLocale } from '../i18n/config'
 import { buildPageMetadata } from './lib/pageMetadata'
+import { getLocaleShell } from './brand'
 
 const dict = getDictionarySync(defaultLocale)
+const shell = getLocaleShell(defaultLocale)
 
 export const metadata: Metadata = buildPageMetadata({
   locale: defaultLocale,
@@ -20,7 +22,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function RootNotFound() {
   return (
-    <LocaleProvider locale={defaultLocale} dict={dict}>
+    <LocaleProvider locale={defaultLocale} dict={dict} {...shell}>
       <BookingProvider>
         <NotFoundContent />
       </BookingProvider>
