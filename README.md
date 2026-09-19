@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Відкрийте [http://localhost:3000/uk](http://localhost:3000/uk) або [http://localhost:3000/pl](http://localhost:3000/pl).
+Відкрийте [http://localhost:3001/uk](http://localhost:3001/uk) або [http://localhost:3001/pl](http://localhost:3001/pl).
 
 ## Збірка
 
