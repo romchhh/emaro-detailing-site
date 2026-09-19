@@ -14,6 +14,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '200mb',
     },
+    // Prevent middleware/proxy from truncating large multipart uploads
+    middlewareClientMaxBodySize: '200mb',
+    proxyClientMaxBodySize: '200mb',
   },
   images: {
     formats: ['image/avif', 'image/webp'],

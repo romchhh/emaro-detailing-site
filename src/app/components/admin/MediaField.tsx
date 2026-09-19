@@ -17,7 +17,7 @@ type MediaFieldProps = {
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
 const VIDEO_ACCEPT = 'video/mp4,video/webm,video/quicktime,video/ogg,.mp4,.webm,.mov,.m4v'
 const MAX_IMAGE_MB = 20
-const MAX_VIDEO_MB = 200
+const MAX_VIDEO_MB = 100
 
 function isLikelyMediaUrl(value: string) {
   if (!value.trim()) return false

@@ -38,15 +38,17 @@ const emptyForm = (): FormState => ({ name: '', phone: '', email: '', website: '
 export default function BookingModal({
   isOpen,
   onClose,
+  formOpenedAt: formOpenedAtProp,
 }: {
   isOpen: boolean
   onClose: () => void
+  /** Page-session timestamp — must NOT reset when the modal opens (bot timing). */
+  formOpenedAt: number
 }) {
   const dict = useDictionary()
   const locale = useLocale()
   const brand = useBrand()
   const dialogRef = useRef<HTMLDivElement>(null)
-  const formOpenedAt = useRef(Date.now())
   const [form, setForm] = useState<FormState>(emptyForm)
   const [status, setStatus] = useState<Status>('idle')
 
@@ -57,7 +59,6 @@ export default function BookingModal({
       return
     }
 
-    formOpenedAt.current = Date.now()
     dialogRef.current?.focus()
   }, [isOpen])
 
@@ -79,7 +80,7 @@ export default function BookingModal({
         locale,
         website: form.website,
         fax: form.fax,
-        formOpenedAt: formOpenedAt.current,
+        formOpenedAt: formOpenedAtProp,
       })
       setStatus('success')
     } catch {

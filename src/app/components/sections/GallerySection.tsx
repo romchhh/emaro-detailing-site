@@ -71,7 +71,6 @@ export default function GallerySection() {
                   <video
                     src={item.src}
                     className={styles.galleryImage}
-                    style={{ objectPosition: item.position }}
                     muted
                     playsInline
                     preload="metadata"
@@ -90,7 +89,6 @@ export default function GallerySection() {
                   fill
                   sizes={index === 0 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 50vw, 33vw'}
                   className={styles.galleryImage}
-                  style={{ objectPosition: item.position }}
                   draggable={false}
                 />
               )}
@@ -162,7 +160,6 @@ export default function GallerySection() {
                   fill
                   sizes="100vw"
                   className={styles.galleryLightboxImage}
-                  style={{ objectPosition: activeItem.position }}
                   priority
                   draggable={false}
                 />

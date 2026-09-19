@@ -5,7 +5,6 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (
-    pathname.startsWith('/api') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/_next') ||
     pathname.includes('.')
@@ -31,5 +30,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Exclude /api so large uploads are not buffered/truncated by middleware (default ~10MB).
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }

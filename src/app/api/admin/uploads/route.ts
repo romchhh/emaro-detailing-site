@@ -24,7 +24,7 @@ const ALLOWED_TYPES = new Set<string>([
 ])
 
 const MAX_IMAGE = 20 * 1024 * 1024
-const MAX_VIDEO = 200 * 1024 * 1024
+const MAX_VIDEO = 100 * 1024 * 1024 // 100 MB
 
 function uploadsDir() {
   const dir = path.join(getCmsDataDir(), 'uploads')
@@ -103,9 +103,32 @@ export async function POST(request: Request) {
   const { error } = await requireAdmin()
   if (error) return error
 
-  const form = await request.formData().catch(() => null)
-  if (!form) {
-    return NextResponse.json({ ok: false, error: 'invalid_form' }, { status: 400 })
+  const contentLength = Number(request.headers.get('content-length') || 0)
+  if (contentLength > MAX_VIDEO + 2 * 1024 * 1024) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'file_too_large',
+        message: 'Plik jest za duży. Wideo max 100 MB, zdjęcia max 20 MB.',
+      },
+      { status: 413 },
+    )
+  }
+
+  let form: FormData | null = null
+  try {
+    form = await request.formData()
+  } catch (err) {
+    console.error('[uploads] formData failed', err)
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'invalid_form',
+        message:
+          'Nie udało się odczytać pliku. Sprawdź rozmiar (wideo max 100 MB, zdjęcia max 20 MB) i spróbuj ponownie.',
+      },
+      { status: 400 },
+    )
   }
 
   const files = form.getAll('files').filter((item): item is File => item instanceof File)
@@ -141,7 +164,16 @@ export async function POST(request: Request) {
     const isVideo = mime.startsWith('video/')
     const max = isVideo ? MAX_VIDEO : MAX_IMAGE
     if (file.size > max) {
-      return NextResponse.json({ ok: false, error: 'file_too_large' }, { status: 400 })
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'file_too_large',
+          message: isVideo
+            ? 'Wideo jest za duże (max 100 MB).'
+            : 'Zdjęcie jest za duże (max 20 MB).',
+        },
+        { status: 400 },
+      )
     }
 
     const filename = `${uid(isVideo ? 'vid' : 'img')}${extensionFor(mime, file.name)}`

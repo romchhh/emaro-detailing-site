@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -18,6 +19,7 @@ type BookingContextValue = {
   openBookingModal: () => void
   closeBookingModal: () => void
   isBookingModalOpen: boolean
+  pageOpenedAt: number
 }
 
 const BookingContext = createContext<BookingContextValue | null>(null)
@@ -25,6 +27,7 @@ const BookingContext = createContext<BookingContextValue | null>(null)
 const PROMPT_DISMISSED_KEY = 'emaro-booking-prompt-dismissed'
 
 export function BookingProvider({ children }: { children: ReactNode }) {
+  const pageOpenedAt = useRef(Date.now())
   const [isOpen, setIsOpen] = useState(false)
   const [promptVisible, setPromptVisible] = useState(false)
   const [promptDismissed, setPromptDismissed] = useState(false)
@@ -76,7 +79,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   return (
     <BookingContext.Provider
-      value={{ openBookingModal, closeBookingModal, isBookingModalOpen: isOpen }}
+      value={{
+        openBookingModal,
+        closeBookingModal,
+        isBookingModalOpen: isOpen,
+        pageOpenedAt: pageOpenedAt.current,
+      }}
     >
       {children}
       {!promptDismissed && (
@@ -86,7 +94,13 @@ export function BookingProvider({ children }: { children: ReactNode }) {
           onDismiss={dismissPrompt}
         />
       )}
-      {isOpen ? <BookingModal isOpen={isOpen} onClose={closeBookingModal} /> : null}
+      {isOpen ? (
+        <BookingModal
+          isOpen={isOpen}
+          onClose={closeBookingModal}
+          formOpenedAt={pageOpenedAt.current}
+        />
+      ) : null}
     </BookingContext.Provider>
   )
 }

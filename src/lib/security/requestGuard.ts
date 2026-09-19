@@ -55,13 +55,15 @@ export function isAllowedOrigin(request: Request): boolean {
   return process.env.NODE_ENV !== 'production'
 }
 
-const MIN_FORM_MS = 800
-const MAX_FORM_MS = 1000 * 60 * 60 * 6 // 6h
+const MIN_FORM_MS = 250
+const MAX_FORM_MS = 1000 * 60 * 60 * 12 // 12h
 
 /** Reject instant bot submits and stale/replayed timestamps. */
 export function isSuspiciousTiming(formOpenedAt: unknown): boolean {
   if (typeof formOpenedAt !== 'number' || !Number.isFinite(formOpenedAt)) return true
   const age = Date.now() - formOpenedAt
+  // Negative clock skew of a few seconds is ok
+  if (age < -5_000) return true
   return age < MIN_FORM_MS || age > MAX_FORM_MS
 }
 
